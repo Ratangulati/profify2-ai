@@ -1,0 +1,14 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+import { registerTools } from "./tools/index.js";
+
+export function createServer() {
+  const server = new McpServer({
+    name: "pm-yc",
+    version: "0.0.0",
+  });
+
+  registerTools(server);
+
+  return server;
+}

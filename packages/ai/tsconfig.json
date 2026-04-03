@@ -1,0 +1,9 @@
+{
+  "extends": "@pm-yc/tsconfig/node.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"]
+}

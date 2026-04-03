@@ -1,0 +1,49 @@
+{
+  "name": "@pm-yc/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "type-check": "tsc --noEmit",
+    "lint": "next lint",
+    "clean": "rm -rf .next .turbo"
+  },
+  "dependencies": {
+    "@auth/core": "^0.34.3",
+    "@auth/prisma-adapter": "^2.7.4",
+    "@boxyhq/saml-jackson": "^1.27.3",
+    "@pm-yc/auth": "workspace:*",
+    "@pm-yc/db": "workspace:*",
+    "@pm-yc/shared": "workspace:*",
+    "@pm-yc/ui": "workspace:*",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@t3-oss/env-nextjs": "^0.11.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.469.0",
+    "next": "14.2.22",
+    "next-auth": "5.0.0-beta.25",
+    "nodemailer": "^6.9.16",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@pm-yc/eslint-config": "workspace:*",
+    "@pm-yc/tsconfig": "workspace:*",
+    "@types/node": "^22.10.5",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.20",
+    "eslint-config-next": "14.2.22",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2"
+  }
+}

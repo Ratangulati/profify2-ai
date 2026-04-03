@@ -1,0 +1,47 @@
+{
+  "name": "@pm-yc/integrations",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./intercom": {
+      "types": "./src/intercom/index.ts",
+      "default": "./src/intercom/index.ts"
+    },
+    "./zendesk": {
+      "types": "./src/zendesk/index.ts",
+      "default": "./src/zendesk/index.ts"
+    },
+    "./salesforce": {
+      "types": "./src/salesforce/index.ts",
+      "default": "./src/salesforce/index.ts"
+    },
+    "./hubspot": {
+      "types": "./src/hubspot/index.ts",
+      "default": "./src/hubspot/index.ts"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@pm-yc/db": "workspace:*",
+    "@pm-yc/shared": "workspace:*",
+    "bottleneck": "^2.19.5"
+  },
+  "devDependencies": {
+    "@pm-yc/eslint-config": "workspace:*",
+    "@pm-yc/tsconfig": "workspace:*",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2",
+    "vitest": "^3.1.1"
+  }
+}

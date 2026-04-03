@@ -1,0 +1,1022 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Workspace & Auth
+// ─────────────────────────────────────────────
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  plan      String   @default("free")
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  memberships WorkspaceMembership[]
+  apiKeys     ApiKey[]
+  auditLogs   AuditLog[]
+  projects    Project[]
+
+  @@map("workspaces")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  avatarUrl     String?   @map("avatar_url")
+  image         String?
+  passwordHash  String?   @map("password_hash")
+  emailVerified DateTime? @map("email_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  accounts     Account[]
+  sessions     Session[]
+  memberships  WorkspaceMembership[]
+  auditLogs    AuditLog[]
+  specComments SpecComment[]
+  decisions    Decision[]              @relation("DecisionCreatedBy")
+  approvals    Decision[]              @relation("DecisionApprovers")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model WorkspaceMembership {
+  id        String          @id @default(cuid())
+  role      WorkspaceRole   @default(MEMBER)
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+  @@map("workspace_memberships")
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyHash     String    @unique @map("key_hash")
+  keyPrefix   String    @map("key_prefix")
+  scopes      String[]  @default([])
+  lastUsedAt  DateTime? @map("last_used_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([keyHash])
+  @@map("api_keys")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  userId      String?   @map("user_id")
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([workspaceId, entityType, entityId])
+  @@index([workspaceId, createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// Projects & Data
+// ─────────────────────────────────────────────
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  settings    Json     @default("{}")
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  dataSources     DataSource[]
+  feedbackItems   FeedbackItem[]
+  themes          Theme[]
+  insights        Insight[]
+  personas        Persona[]
+  opportunities   Opportunity[]
+  specs           Spec[]
+  tickets         Ticket[]
+  decisions       Decision[]
+  trendDataPoints    TrendDataPoint[]
+  spikeAlerts        SpikeAlert[]
+  contradictions     Contradiction[]
+  assumptions        Assumption[]
+  competitors        Competitor[]
+  competitorMentions CompetitorMention[]
+  jtbds              JTBD[]
+  featureOutcomes    FeatureOutcome[]
+  scoringConfig      ScoringConfig?
+
+  @@index([workspaceId])
+  @@index([workspaceId, archived])
+  @@map("projects")
+}
+
+model DataSource {
+  id           String           @id @default(cuid())
+  type         DataSourceType
+  name         String
+  config       Json             @default("{}")
+  syncStatus   SyncStatus       @default(IDLE) @map("sync_status")
+  lastSyncAt   DateTime?        @map("last_synced_at")
+  lastSyncError String?         @map("last_sync_error")
+  enabled      Boolean          @default(true)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  feedbackItems FeedbackItem[]
+
+  @@index([projectId])
+  @@index([projectId, type])
+  @@map("data_sources")
+}
+
+model FeedbackItem {
+  id              String   @id @default(cuid())
+  content         String
+  sourceRef       String?  @map("source_ref")
+  sourceUrl       String?  @map("source_url")
+  customerEmail   String?  @map("customer_email")
+  customerName    String?  @map("customer_name")
+  segmentTags     String[] @map("segment_tags")
+  language        String?  @default("en")
+  sentiment              Sentiment?
+  sentimentScore         Float?   @map("sentiment_score")
+  sentimentJustification String?  @map("sentiment_justification")
+  sentimentProcessed     Boolean  @default(false) @map("sentiment_processed")
+  metadata               Json     @default("{}")
+  processedForInsights   Boolean  @default(false) @map("processed_for_insights")
+  ingestedAt      DateTime @default(now()) @map("ingested_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  projectId    String      @map("project_id")
+  project      Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  dataSourceId String?     @map("data_source_id")
+  dataSource   DataSource? @relation(fields: [dataSourceId], references: [id], onDelete: SetNull)
+
+  attachments        Attachment[]
+  themeFeedbackItems ThemeFeedbackItem[]
+  insightEvidence    InsightEvidence[]
+  specEvidence       SpecEvidence[]
+  competitorMentions CompetitorMention[]
+
+  @@index([projectId])
+  @@index([projectId, ingestedAt])
+  @@index([projectId, sentiment])
+  @@index([projectId, processedForInsights])
+  @@index([projectId, sentimentProcessed])
+  @@unique([dataSourceId, sourceRef])
+  @@index([dataSourceId])
+  @@index([segmentTags], type: Gin)
+  @@map("feedback_items")
+}
+
+model Attachment {
+  id          String         @id @default(cuid())
+  filename    String
+  mimeType    String         @map("mime_type")
+  sizeBytes   Int            @map("size_bytes")
+  storagePath String         @map("storage_path")
+  type        AttachmentType @default(FILE)
+  metadata    Json           @default("{}")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  feedbackItemId String       @map("feedback_item_id")
+  feedbackItem   FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+
+  @@index([feedbackItemId])
+  @@map("attachments")
+}
+
+// ─────────────────────────────────────────────
+// Intelligence
+// ─────────────────────────────────────────────
+
+model Theme {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  color       String?
+  autoGenerated Boolean @default(false) @map("auto_generated")
+  feedbackCount Int     @default(0)     @map("feedback_count")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  themeFeedbackItems ThemeFeedbackItem[]
+  insights           Insight[]
+  jtbds              JTBD[]
+  opportunities      OpportunityTheme[]
+
+  @@index([projectId])
+  @@index([projectId, feedbackCount])
+  @@map("themes")
+}
+
+model ThemeFeedbackItem {
+  id         String   @id @default(cuid())
+  confidence Float    @default(1.0)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  themeId        String       @map("theme_id")
+  theme          Theme        @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  feedbackItemId String       @map("feedback_item_id")
+  feedbackItem   FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+
+  @@unique([themeId, feedbackItemId])
+  @@index([feedbackItemId])
+  @@map("theme_feedback_items")
+}
+
+model Insight {
+  id                  String      @id @default(cuid())
+  title               String
+  description         String
+  type                InsightType
+  severityScore       Float       @default(0) @map("severity_score")
+  frequencyCount      Int         @default(0) @map("frequency_count")
+  trend               InsightTrend @default(STABLE)
+  segmentDistribution Json        @default("{}") @map("segment_distribution")
+  affectedWorkflow    String?     @map("affected_workflow")
+  inferredJtbd        String?     @map("inferred_jtbd")
+  embedding           Float[]     @default([])
+  metadata            Json        @default("{}")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  themeId   String? @map("theme_id")
+  theme     Theme?  @relation(fields: [themeId], references: [id], onDelete: SetNull)
+
+  insightEvidence   InsightEvidence[]
+  opportunities     OpportunityInsight[]
+  specEvidence      SpecEvidence[]
+  ticketInsights    TicketInsight[]
+  decisionEvidence  DecisionEvidence[]
+  contradictionsA   Contradiction[] @relation("ContradictionInsightA")
+  contradictionsB   Contradiction[] @relation("ContradictionInsightB")
+
+  @@index([projectId])
+  @@index([projectId, type])
+  @@index([projectId, severityScore])
+  @@index([projectId, trend])
+  @@index([themeId])
+  @@map("insights")
+}
+
+model InsightEvidence {
+  id        String   @id @default(cuid())
+  quote     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  insightId      String       @map("insight_id")
+  insight        Insight      @relation(fields: [insightId], references: [id], onDelete: Cascade)
+  feedbackItemId String       @map("feedback_item_id")
+  feedbackItem   FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+
+  @@unique([insightId, feedbackItemId])
+  @@index([feedbackItemId])
+  @@map("insight_evidence")
+}
+
+model TrendDataPoint {
+  id         String   @id @default(cuid())
+  entityType String   @map("entity_type")  // "theme" | "insight" | "project"
+  entityId   String   @map("entity_id")
+  period     DateTime                       // Start of the week (ISO Monday)
+  metric     String                         // "volume" | "avg_sentiment" | "source_distribution"
+  value      Float    @default(0)
+  metadata   Json     @default("{}")        // source_distribution stored here as JSON
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, entityType, entityId, period, metric])
+  @@index([projectId, entityType, entityId])
+  @@index([projectId, period])
+  @@map("trend_data_points")
+}
+
+model SpikeAlert {
+  id          String     @id @default(cuid())
+  entityType  String     @map("entity_type")  // "theme" | "insight"
+  entityId    String     @map("entity_id")
+  entityTitle String     @map("entity_title")
+  spikeFactor Float      @map("spike_factor")
+  currentVolume Int      @map("current_volume")
+  rollingAverage Float   @map("rolling_average")
+  sampleItems Json       @default("[]") @map("sample_items")
+  status      AlertStatus @default(PENDING)
+  deliveredVia String[]  @default([]) @map("delivered_via")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  resolvedAt  DateTime?  @map("resolved_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([projectId, createdAt])
+  @@map("spike_alerts")
+}
+
+model Persona {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  goals        String[] @default([])
+  frustrations String[] @default([])
+  behaviors    Json     @default("{}")
+  demographics Json     @default("{}")
+  autoGenerated Boolean @default(false) @map("auto_generated")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("personas")
+}
+
+model Opportunity {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String?
+  status             OpportunityStatus @default(IDENTIFIED)
+
+  // Composite score dimensions
+  frequencyScore     Float    @default(0) @map("frequency_score")
+  severityScore      Float    @default(0) @map("severity_score")
+  strategicAlignment Float    @default(0) @map("strategic_alignment")
+  effortEstimate     Int      @default(3) @map("effort_estimate")      // 1-5 scale
+  compositeScore     Float    @default(0) @map("composite_score")
+
+  // RICE score components
+  riceReach          Int?     @map("rice_reach")
+  riceImpact         Float?   @map("rice_impact")
+  riceConfidence     Float?   @map("rice_confidence")
+  riceEffort         Float?   @map("rice_effort")
+  riceScore          Float?   @map("rice_score")
+
+  // ICE score components
+  iceImpact          Float?   @map("ice_impact")
+  iceConfidence      Float?   @map("ice_confidence")
+  iceEase            Float?   @map("ice_ease")
+  iceScore           Float?   @map("ice_score")
+
+  // Segment-weighted frequency
+  segmentWeightedFreq Float   @default(0) @map("segment_weighted_freq")
+
+  // Strategic alignment details (per-bet scores as JSON)
+  alignmentScores    Json     @default("{}") @map("alignment_scores")
+
+  // Manual override rank (null = use computed score)
+  manualRank         Int?     @map("manual_rank")
+
+  customScores       Json     @default("{}")   @map("custom_scores")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  linkedInsights OpportunityInsight[]
+  linkedThemes   OpportunityTheme[]
+
+  @@index([projectId])
+  @@index([projectId, compositeScore])
+  @@index([projectId, riceScore])
+  @@index([projectId, iceScore])
+  @@index([projectId, status])
+  @@index([projectId, manualRank])
+  @@map("opportunities")
+}
+
+model OpportunityTheme {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  opportunityId String      @map("opportunity_id")
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  themeId       String      @map("theme_id")
+  theme         Theme       @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([opportunityId, themeId])
+  @@index([themeId])
+  @@map("opportunity_themes")
+}
+
+model ScoringConfig {
+  id        String   @id @default(cuid())
+
+  // Composite score weights (must sum to 1.0)
+  weightFrequency          Float @default(0.3) @map("weight_frequency")
+  weightSeverity           Float @default(0.3) @map("weight_severity")
+  weightStrategicAlignment Float @default(0.2) @map("weight_strategic_alignment")
+  weightEffortInverse      Float @default(0.2) @map("weight_effort_inverse")
+
+  // Segment multipliers (JSON: { "enterprise": 5, "smb": 2, "free": 1 })
+  segmentMultipliers Json @default("{\"enterprise\": 5, \"smb\": 2, \"free\": 1}") @map("segment_multipliers")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  projectId String  @unique @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  strategicBets StrategicBet[]
+
+  @@map("scoring_configs")
+}
+
+model StrategicBet {
+  id        String   @id @default(cuid())
+  statement String
+  weight    Float    @default(1.0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  scoringConfigId String        @map("scoring_config_id")
+  scoringConfig   ScoringConfig @relation(fields: [scoringConfigId], references: [id], onDelete: Cascade)
+
+  @@index([scoringConfigId])
+  @@map("strategic_bets")
+}
+
+model OpportunityInsight {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  opportunityId String      @map("opportunity_id")
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  insightId     String      @map("insight_id")
+  insight       Insight     @relation(fields: [insightId], references: [id], onDelete: Cascade)
+
+  @@unique([opportunityId, insightId])
+  @@index([insightId])
+  @@map("opportunity_insights")
+}
+
+// ─────────────────────────────────────────────
+// Documents
+// ─────────────────────────────────────────────
+
+model Spec {
+  id          String     @id @default(cuid())
+  title       String
+  type        SpecType   @default(PRD)
+  status      SpecStatus @default(DRAFT)
+  content     Json       @default("{}")
+  metadata    Json       @default("{}")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  versions    SpecVersion[]
+  comments    SpecComment[]
+  evidence    SpecEvidence[]
+  tickets     Ticket[]
+  assumptions Assumption[]
+
+  @@index([projectId])
+  @@index([projectId, status])
+  @@map("specs")
+}
+
+model SpecVersion {
+  id           String   @id @default(cuid())
+  version      Int
+  content      Json
+  diffMetadata Json?    @map("diff_metadata")
+  changeNote   String?  @map("change_note")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  specId String @map("spec_id")
+  spec   Spec   @relation(fields: [specId], references: [id], onDelete: Cascade)
+
+  @@unique([specId, version])
+  @@index([specId])
+  @@map("spec_versions")
+}
+
+model SpecComment {
+  id         String   @id @default(cuid())
+  content    String
+  sectionRef String?  @map("section_ref")
+  resolved   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  specId String @map("spec_id")
+  spec   Spec   @relation(fields: [specId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([specId])
+  @@index([specId, sectionRef])
+  @@map("spec_comments")
+}
+
+model SpecEvidence {
+  id         String   @id @default(cuid())
+  sectionRef String?  @map("section_ref")
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  specId         String        @map("spec_id")
+  spec           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
+  feedbackItemId String?       @map("feedback_item_id")
+  feedbackItem   FeedbackItem? @relation(fields: [feedbackItemId], references: [id], onDelete: SetNull)
+  insightId      String?       @map("insight_id")
+  insight        Insight?      @relation(fields: [insightId], references: [id], onDelete: SetNull)
+
+  @@index([specId])
+  @@index([feedbackItemId])
+  @@index([insightId])
+  @@map("spec_evidence")
+}
+
+// ─────────────────────────────────────────────
+// Synthesis
+// ─────────────────────────────────────────────
+
+model Contradiction {
+  id                    String              @id @default(cuid())
+  description           String
+  explanation           String
+  recommendedResolution String?             @map("recommended_resolution")
+  status                ContradictionStatus @default(OPEN)
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+
+  projectId  String  @map("project_id")
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  insightAId String  @map("insight_a_id")
+  insightA   Insight @relation("ContradictionInsightA", fields: [insightAId], references: [id], onDelete: Cascade)
+  insightBId String  @map("insight_b_id")
+  insightB   Insight @relation("ContradictionInsightB", fields: [insightBId], references: [id], onDelete: Cascade)
+
+  @@unique([insightAId, insightBId])
+  @@index([projectId])
+  @@index([projectId, status])
+  @@map("contradictions")
+}
+
+model Assumption {
+  id               String                   @id @default(cuid())
+  assumption       String
+  category         AssumptionCategory
+  quoteText        String                   @map("quote_text")
+  sectionRef       String?                  @map("section_ref")
+  riskLevel        AssumptionRiskLevel      @default(MEDIUM)
+  validationStatus AssumptionValidationStatus @default(UNVALIDATED) @map("validation_status")
+  suggestion       String?
+  metadata         Json                     @default("{}")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  specId    String  @map("spec_id")
+  spec      Spec    @relation(fields: [specId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([specId])
+  @@index([projectId, riskLevel])
+  @@index([projectId, validationStatus])
+  @@map("assumptions")
+}
+
+// ─────────────────────────────────────────────
+// Competitive Intelligence
+// ─────────────────────────────────────────────
+
+model Competitor {
+  id          String   @id @default(cuid())
+  name        String
+  aliases     String[] @default([])
+  description String?
+  logoUrl     String?  @map("logo_url")
+  websiteUrl  String?  @map("website_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  mentions CompetitorMention[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@map("competitors")
+}
+
+model CompetitorMention {
+  id                String         @id @default(cuid())
+  comparisonType    ComparisonType @map("comparison_type")
+  featureArea       String?        @map("feature_area")
+  specificAdvantage String?        @map("specific_advantage")
+  verbatimQuote     String         @map("verbatim_quote")
+  switchingSignal   Boolean        @default(false) @map("switching_signal")
+  detectionMethod   String         @default("exact") @map("detection_method")
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  projectId      String       @map("project_id")
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  competitorId   String       @map("competitor_id")
+  competitor     Competitor   @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  feedbackItemId String       @map("feedback_item_id")
+  feedbackItem   FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+
+  @@unique([competitorId, feedbackItemId])
+  @@index([projectId])
+  @@index([projectId, competitorId])
+  @@index([competitorId, comparisonType])
+  @@index([feedbackItemId])
+  @@map("competitor_mentions")
+}
+
+// ─────────────────────────────────────────────
+// JTBD & Cross-Project Learning
+// ─────────────────────────────────────────────
+
+model JTBD {
+  id               String      @id @default(cuid())
+  statement        String
+  jobType          JTBDJobType @map("job_type")
+  importance       Int         @default(3)
+  satisfaction     Int         @default(3)
+  opportunityScore Float       @default(0) @map("opportunity_score")
+  evidence         Json        @default("[]")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  themeId   String? @map("theme_id")
+  theme     Theme?  @relation(fields: [themeId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([projectId, opportunityScore])
+  @@index([themeId])
+  @@map("jtbds")
+}
+
+model FeatureOutcome {
+  id             String   @id @default(cuid())
+  featureName    String   @map("feature_name")
+  description    String?
+  impactScore    Float    @default(0) @map("impact_score")
+  linkedInsights Json     @default("[]") @map("linked_insights")
+  metricChanges  Json     @default("{}") @map("metric_changes")
+  shippedAt      DateTime @map("shipped_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, impactScore])
+  @@map("feature_outcomes")
+}
+
+// ─────────────────────────────────────────────
+// Execution
+// ─────────────────────────────────────────────
+
+model Ticket {
+  id           String       @id @default(cuid())
+  externalId   String?      @map("external_id")
+  externalUrl  String?      @map("external_url")
+  provider     TicketProvider?
+  title        String
+  description  String?
+  status       String       @default("open")
+  priority     String?
+  metadata     Json         @default("{}")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  specId    String? @map("spec_id")
+  spec      Spec?   @relation(fields: [specId], references: [id], onDelete: SetNull)
+
+  ticketInsights TicketInsight[]
+
+  @@unique([provider, externalId])
+  @@index([projectId])
+  @@index([projectId, status])
+  @@index([specId])
+  @@map("tickets")
+}
+
+model TicketInsight {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ticketId  String  @map("ticket_id")
+  ticket    Ticket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  insightId String  @map("insight_id")
+  insight   Insight @relation(fields: [insightId], references: [id], onDelete: Cascade)
+
+  @@unique([ticketId, insightId])
+  @@index([insightId])
+  @@map("ticket_insights")
+}
+
+model Decision {
+  id          String   @id @default(cuid())
+  title       String
+  rationale   String
+  outcome     String?
+  evidence    Json     @default("[]")
+  status      DecisionStatus @default(PROPOSED)
+  decidedAt   DateTime?      @map("decided_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  projectId   String  @map("project_id")
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdById String  @map("created_by_id")
+  createdBy   User    @relation("DecisionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  approvers   User[]  @relation("DecisionApprovers")
+
+  decisionEvidence DecisionEvidence[]
+
+  @@index([projectId])
+  @@index([projectId, status])
+  @@map("decisions")
+}
+
+model DecisionEvidence {
+  id        String   @id @default(cuid())
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  decisionId String   @map("decision_id")
+  decision   Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  insightId  String   @map("insight_id")
+  insight    Insight  @relation(fields: [insightId], references: [id], onDelete: Cascade)
+
+  @@unique([decisionId, insightId])
+  @@index([insightId])
+  @@map("decision_evidence")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+  GUEST
+}
+
+enum DataSourceType {
+  INTERCOM
+  ZENDESK
+  SALESFORCE
+  HUBSPOT
+  LINEAR
+  JIRA
+  GITHUB
+  SLACK
+  CSV
+  WEBHOOK
+  EMAIL
+  BROWSER_EXTENSION
+  APP_REVIEW
+  INTERVIEW
+  ANALYTICS
+}
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  SUCCESS
+  FAILED
+}
+
+enum Sentiment {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+  MIXED
+}
+
+enum AttachmentType {
+  FILE
+  AUDIO
+  VIDEO
+  TRANSCRIPT
+  IMAGE
+}
+
+enum InsightType {
+  PAIN_POINT
+  DESIRE
+  OBSERVATION
+  TREND
+  OPPORTUNITY
+}
+
+enum InsightTrend {
+  INCREASING
+  STABLE
+  DECREASING
+}
+
+enum TrendLabel {
+  SPIKING
+  GROWING
+  STABLE
+  DECLINING
+}
+
+enum AlertStatus {
+  PENDING
+  DELIVERED
+  RESOLVED
+  DISMISSED
+}
+
+enum OpportunityStatus {
+  IDENTIFIED
+  EVALUATING
+  PRIORITIZED
+  IN_PROGRESS
+  SHIPPED
+  KILLED
+  DEFERRED
+  ARCHIVED
+}
+
+enum SpecType {
+  PRD
+  ONE_PAGER
+  USER_STORY
+  RFC
+  DESIGN_DOC
+}
+
+enum SpecStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  ARCHIVED
+}
+
+enum TicketProvider {
+  LINEAR
+  JIRA
+  GITHUB
+  MANUAL
+}
+
+enum DecisionStatus {
+  PROPOSED
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
+enum ContradictionStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+enum AssumptionCategory {
+  USER_BEHAVIOR
+  TECHNICAL
+  MARKET
+  ADOPTION
+  RESOURCE
+  REGULATORY
+}
+
+enum AssumptionRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AssumptionValidationStatus {
+  UNVALIDATED
+  VALIDATED
+  INVALIDATED
+  PARTIALLY_VALIDATED
+}
+
+enum ComparisonType {
+  FAVORABLE
+  UNFAVORABLE
+  NEUTRAL
+}
+
+enum JTBDJobType {
+  MAIN
+  RELATED
+  EMOTIONAL
+  SOCIAL
+}

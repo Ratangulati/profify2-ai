@@ -1,0 +1,3 @@
+{
+  "extends": "@pm-yc/tsconfig/base.json"
+}
