@@ -10,6 +10,7 @@ export type {
   CompletionResponse,
   EmbeddingRequest,
   EmbeddingResponse,
+  StreamEvent,
 } from "./types";
 
 export { OpenAIProvider } from "./providers/openai";
@@ -191,6 +192,40 @@ export {
   CONFIDENCE_THRESHOLDS,
 } from "./scoring/index.js";
 
+// PRD generation
+export {
+  generatePRD,
+  handleAIAssist,
+  extractCitations,
+  countAssumptions,
+  calculateEvidenceStrength,
+  parsePRDResponse,
+  buildPRDPrompt,
+  buildFindEvidencePrompt,
+  buildChallengePrompt,
+  buildExpandPrompt,
+  buildSimplifyPrompt,
+  PRD_SECTIONS,
+  PRD_SECTION_TITLES,
+} from "./prd/index.js";
+
+export type {
+  PRDSectionId,
+  EvidencePackage,
+  EvidencePainPoint,
+  EvidenceDesire,
+  EvidenceCompetitor,
+  EvidenceJTBD,
+  EvidenceAnalytics,
+  EvidenceTheme,
+  GeneratedPRD,
+  PRDSection,
+  PRDCitation,
+  AIAssistCommand,
+  AIAssistRequest,
+  AIAssistResponse,
+} from "./prd/index.js";
+
 // Query engine
 export {
   classifyByPattern,
@@ -209,8 +244,8 @@ export type {
   ParsedQuery,
   EvidenceInsight,
   EvidenceOpportunity,
-  EvidenceTheme,
-  EvidenceCompetitor,
+  EvidenceTheme as QueryEvidenceTheme,
+  EvidenceCompetitor as QueryEvidenceCompetitor,
   AssembledEvidence,
   Recommendation,
   QueryResponse,

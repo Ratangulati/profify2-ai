@@ -185,6 +185,7 @@ model Project {
   competitorMentions CompetitorMention[]
   jtbds              JTBD[]
   featureOutcomes    FeatureOutcome[]
+  copilotThreads     CopilotThread[]
   scoringConfig      ScoringConfig?
 
   @@index([workspaceId])
@@ -611,10 +612,14 @@ model SpecComment {
 }
 
 model SpecEvidence {
-  id         String   @id @default(cuid())
-  sectionRef String?  @map("section_ref")
-  note       String?
-  createdAt  DateTime @default(now()) @map("created_at")
+  id           String            @id @default(cuid())
+  sectionRef   String?           @map("section_ref")
+  note         String?
+  evidenceType SpecEvidenceType  @default(INSIGHT) @map("evidence_type")
+  citationRef  String?           @map("citation_ref")   // e.g., "[Evidence: ins_xyz]"
+  position     Int?                                      // character offset in section
+  versionNum   Int?              @map("version_num")     // spec version this citation belongs to
+  createdAt    DateTime          @default(now()) @map("created_at")
 
   specId         String        @map("spec_id")
   spec           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
@@ -624,6 +629,7 @@ model SpecEvidence {
   insight        Insight?      @relation(fields: [insightId], references: [id], onDelete: SetNull)
 
   @@index([specId])
+  @@index([specId, sectionRef])
   @@index([feedbackItemId])
   @@index([insightId])
   @@map("spec_evidence")
@@ -858,6 +864,42 @@ model DecisionEvidence {
   @@map("decision_evidence")
 }
 
+// ── Copilot ───────────────────────────────────────────────────────────
+
+model CopilotThread {
+  id        String   @id @default(cuid())
+  title     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  messages CopilotMessage[]
+
+  @@index([projectId])
+  @@map("copilot_threads")
+}
+
+model CopilotMessage {
+  id            String              @id @default(cuid())
+  role          CopilotMessageRole
+  content       String
+  mentions      Json?
+  toolTrace     Json?               @map("tool_trace")
+  citations     Json?
+  feedback      CopilotFeedback?
+  activeContext Json?               @map("active_context")
+  commandType   String?             @map("command_type")
+  createdAt     DateTime            @default(now()) @map("created_at")
+
+  threadId String         @map("thread_id")
+  thread   CopilotThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+  @@map("copilot_messages")
+}
+
 // ─────────────────────────────────────────────
 // Enums
 // ─────────────────────────────────────────────
@@ -964,6 +1006,15 @@ enum SpecStatus {
   ARCHIVED
 }
 
+enum SpecEvidenceType {
+  INSIGHT
+  FEEDBACK_ITEM
+  ANALYTICS
+  COMPETITIVE
+  JTBD
+  ASSUMPTION
+}
+
 enum TicketProvider {
   LINEAR
   JIRA
@@ -1019,4 +1070,15 @@ enum JTBDJobType {
   RELATED
   EMOTIONAL
   SOCIAL
+}
+
+enum CopilotMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum CopilotFeedback {
+  POSITIVE
+  NEGATIVE
 }

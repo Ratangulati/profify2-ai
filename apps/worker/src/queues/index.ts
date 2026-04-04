@@ -136,3 +136,16 @@ export const jtbdExtractionQueue = new Queue("jtbd-extraction", {
     removeOnFail: { count: 1000 },
   },
 });
+
+export const prdGenerationQueue = new Queue("prd-generation", {
+  connection,
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: {
+      type: "exponential",
+      delay: 5000,
+    },
+    removeOnComplete: { count: 500 },
+    removeOnFail: { count: 1000 },
+  },
+});

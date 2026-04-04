@@ -24,6 +24,7 @@ import {
   processInsightExtraction,
 } from "./processors/insight-extraction.js";
 import { type JTBDExtractionData, processJTBDExtraction } from "./processors/jtbd-extraction.js";
+import { type PRDGenerationData, processPRDGeneration } from "./processors/prd-generation.js";
 import {
   type SentimentAnalysisData,
   processSentimentAnalysis,
@@ -116,6 +117,11 @@ const jtbdWorker = new Worker<JTBDExtractionData>("jtbd-extraction", processJTBD
   concurrency: 1,
 });
 
+const prdWorker = new Worker<PRDGenerationData>("prd-generation", processPRDGeneration, {
+  connection,
+  concurrency: 1,
+});
+
 function handleWorkerEvents(worker: Worker, name: string) {
   worker.on("completed", (job) => {
     console.log(`[${name}] Job ${job.id} completed`);
@@ -138,6 +144,7 @@ handleWorkerEvents(contradictionWorker, "ContradictionWorker");
 handleWorkerEvents(assumptionWorker, "AssumptionWorker");
 handleWorkerEvents(competitiveWorker, "CompetitiveWorker");
 handleWorkerEvents(jtbdWorker, "JTBDWorker");
+handleWorkerEvents(prdWorker, "PRDWorker");
 
 async function shutdown() {
   console.log("[Worker] Shutting down...");
@@ -151,6 +158,7 @@ async function shutdown() {
   await assumptionWorker.close();
   await competitiveWorker.close();
   await jtbdWorker.close();
+  await prdWorker.close();
   await connection.quit();
   process.exit(0);
 }

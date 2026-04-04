@@ -33,9 +33,20 @@ export interface EmbeddingResponse {
   };
 }
 
+export interface StreamEvent {
+  type: "content_delta" | "done";
+  content?: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
 export interface LLMProvider {
   readonly name: string;
   complete(request: CompletionRequest): Promise<CompletionResponse>;
+  streamComplete(request: CompletionRequest): AsyncIterable<StreamEvent>;
   embed?(request: EmbeddingRequest): Promise<EmbeddingResponse>;
 }
 

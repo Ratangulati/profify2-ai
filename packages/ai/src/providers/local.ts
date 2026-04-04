@@ -1,4 +1,4 @@
-import type { CompletionRequest, CompletionResponse, LLMProvider } from "../types";
+import type { CompletionRequest, CompletionResponse, LLMProvider, StreamEvent } from "../types";
 
 export class LocalProvider implements LLMProvider {
   readonly name = "local";
@@ -39,6 +39,19 @@ export class LocalProvider implements LLMProvider {
         promptTokens: data.usage?.prompt_tokens ?? 0,
         completionTokens: data.usage?.completion_tokens ?? 0,
         totalTokens: data.usage?.total_tokens ?? 0,
+      },
+    };
+  }
+
+  async *streamComplete(request: CompletionRequest): AsyncIterable<StreamEvent> {
+    const response = await this.complete(request);
+    yield { type: "content_delta", content: response.content };
+    yield {
+      type: "done",
+      usage: {
+        promptTokens: response.usage.promptTokens,
+        completionTokens: response.usage.completionTokens,
+        totalTokens: response.usage.totalTokens,
       },
     };
   }

@@ -4,12 +4,14 @@ import { authenticate } from "../middleware/auth.js";
 import { enforceWorkspace, requireRole } from "../middleware/workspace.js";
 
 import competitiveRouter from "./competitive.js";
+import copilotRouter from "./copilot.js";
 import healthRouter from "./health.js";
 import insightsRouter from "./insights.js";
 import integrationsRouter from "./integrations.js";
 import jtbdRouter from "./jtbd.js";
 import opportunitiesRouter from "./opportunities.js";
 import queryRouter from "./query.js";
+import specsRouter from "./specs.js";
 import synthesisRouter from "./synthesis.js";
 import trendsRouter from "./trends.js";
 
@@ -73,8 +75,14 @@ router.use(jtbdRouter);
 // Opportunity scoring & prioritization routes
 router.use(opportunitiesRouter);
 
+// Spec & PRD routes
+router.use(specsRouter);
+
 // Query engine routes
 router.use(queryRouter);
+
+// Copilot routes
+router.use(copilotRouter);
 
 // Example: GET /api/workspaces/:workspaceId/me
 router.get(

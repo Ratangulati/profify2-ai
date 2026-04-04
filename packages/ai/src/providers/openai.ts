@@ -6,6 +6,7 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
   LLMProvider,
+  StreamEvent,
 } from "../types";
 
 export class OpenAIProvider implements LLMProvider {
@@ -37,6 +38,40 @@ export class OpenAIProvider implements LLMProvider {
         promptTokens: response.usage?.prompt_tokens ?? 0,
         completionTokens: response.usage?.completion_tokens ?? 0,
         totalTokens: response.usage?.total_tokens ?? 0,
+      },
+    };
+  }
+
+  async *streamComplete(request: CompletionRequest): AsyncIterable<StreamEvent> {
+    const stream = await this.client.chat.completions.create({
+      model: request.model ?? this.defaultModel,
+      messages: request.messages,
+      temperature: request.temperature ?? 0.7,
+      max_tokens: request.maxTokens,
+      stream: true,
+    });
+
+    let promptTokens = 0;
+    let completionTokens = 0;
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) {
+        yield { type: "content_delta", content: delta };
+      }
+
+      if (chunk.usage) {
+        promptTokens = chunk.usage.prompt_tokens;
+        completionTokens = chunk.usage.completion_tokens;
+      }
+    }
+
+    yield {
+      type: "done",
+      usage: {
+        promptTokens,
+        completionTokens,
+        totalTokens: promptTokens + completionTokens,
       },
     };
   }

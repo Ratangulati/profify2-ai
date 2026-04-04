@@ -84,6 +84,16 @@ export type SpecType = "PRD" | "ONE_PAGER" | "USER_STORY" | "RFC" | "DESIGN_DOC"
 
 export type SpecStatus = "DRAFT" | "REVIEW" | "APPROVED" | "ARCHIVED";
 
+export type SpecEvidenceType =
+  | "INSIGHT"
+  | "FEEDBACK_ITEM"
+  | "ANALYTICS"
+  | "COMPETITIVE"
+  | "JTBD"
+  | "ASSUMPTION";
+
+export type AIAssistCommand = "find_evidence" | "challenge" | "expand" | "simplify";
+
 export type DecisionStatus = "PROPOSED" | "APPROVED" | "REJECTED" | "SUPERSEDED";
 
 // API Response types

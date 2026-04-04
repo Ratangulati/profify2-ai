@@ -1,6 +1,6 @@
 {
   "name": "@pm-yc/mcp-server",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -8,8 +8,10 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:sse": "tsx watch src/index.ts --sse",
     "build": "tsup src/index.ts --format esm",
     "start": "node dist/index.js",
+    "start:sse": "node dist/index.js --sse",
     "type-check": "tsc --noEmit",
     "lint": "eslint src/",
     "clean": "rm -rf dist .turbo"
@@ -17,12 +19,16 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.3.0",
     "@pm-yc/ai": "workspace:*",
+    "@pm-yc/auth": "workspace:*",
+    "@pm-yc/db": "workspace:*",
     "@pm-yc/shared": "workspace:*",
+    "express": "^4.21.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@pm-yc/eslint-config": "workspace:*",
     "@pm-yc/tsconfig": "workspace:*",
+    "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
