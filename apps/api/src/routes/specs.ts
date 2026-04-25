@@ -254,14 +254,19 @@ router.patch(
       }
 
       // Update spec
-      const updateData: Record<string, unknown> = {};
+      const updateData: {
+        title?: string;
+        status?: "DRAFT" | "REVIEW" | "APPROVED" | "ARCHIVED";
+        content?: Prisma.InputJsonValue;
+      } = {};
       if (data.title !== undefined) updateData.title = data.title;
-      if (data.status !== undefined) updateData.status = data.status;
-      if (data.content !== undefined) updateData.content = data.content;
+      if (data.status !== undefined)
+        updateData.status = data.status as "DRAFT" | "REVIEW" | "APPROVED" | "ARCHIVED";
+      if (data.content !== undefined) updateData.content = data.content as Prisma.InputJsonValue;
 
       const updated = await db.spec.update({
         where: { id: specId },
-        data: updateData as any,
+        data: updateData,
       });
 
       // Create new version if content changed
