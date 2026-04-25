@@ -18,7 +18,7 @@ interface CopilotInputProps {
   apiBaseUrl: string;
   workspaceId: string;
   projectId: string;
-  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
+  inputRef?: React.Ref<HTMLTextAreaElement>;
 }
 
 export function CopilotInput({
@@ -37,7 +37,7 @@ export function CopilotInput({
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [mentionStartIndex, setMentionStartIndex] = useState(-1);
   const internalRef = useRef<HTMLTextAreaElement>(null);
-  const textareaRef = externalRef ?? internalRef;
+  const textareaRef = (externalRef ?? internalRef) as React.RefObject<HTMLTextAreaElement>;
 
   // Auto-resize textarea
   useEffect(() => {
@@ -129,7 +129,7 @@ export function CopilotInput({
 
       <div className="flex items-end gap-2">
         <textarea
-          ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
+          ref={textareaRef}
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
