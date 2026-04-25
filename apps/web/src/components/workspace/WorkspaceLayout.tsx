@@ -32,10 +32,6 @@ export function WorkspaceLayout({ workspaceId, projectId, apiBaseUrl }: Workspac
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
-      if (mod && e.key === "k") {
-        e.preventDefault();
-        setCommandPaletteOpen(true);
-      }
       if (mod && e.key === "3") {
         e.preventDefault();
         if (rightCollapsed) {
