@@ -648,7 +648,7 @@ export function PRDEditor({ workspaceId, specId, apiBaseUrl }: PRDEditorProps) {
 
             <span style={{ fontSize: 12, color: "#6b7280" }}>
               {spec.evidence.length} citations | {spec.assumptions.length} assumptions |{" "}
-              {(spec.metadata as Record<string, unknown>).evidenceCount ?? 0} evidence items
+              {String((spec.metadata as Record<string, unknown>).evidenceCount ?? 0)} evidence items
             </span>
           </div>
         </div>

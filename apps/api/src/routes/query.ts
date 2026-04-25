@@ -6,7 +6,7 @@ import {
   type EvidenceInsight,
   type EvidenceOpportunity,
   type EvidenceTheme,
-  type EvidenceCompetitor,
+  type QueryEvidenceCompetitor,
 } from "@pm-yc/ai";
 import { db } from "@pm-yc/db";
 import { Router } from "express";
@@ -138,7 +138,7 @@ async function assembleEvidence(
   }));
 
   // Fetch competitive intel if relevant
-  let evidenceCompetitors: EvidenceCompetitor[] = [];
+  let evidenceCompetitors: QueryEvidenceCompetitor[] = [];
   if (intent === "competitive" || filters.competitor) {
     const compWhere: Record<string, unknown> = { projectId };
     if (filters.competitor) {
