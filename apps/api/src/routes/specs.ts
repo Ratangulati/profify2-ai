@@ -1,6 +1,6 @@
 import { handleAIAssist, type AIAssistCommand } from "@pm-yc/ai";
 import { createProvider } from "@pm-yc/ai";
-import { db } from "@pm-yc/db";
+import { db, Prisma } from "@pm-yc/db";
 import { Queue } from "bullmq";
 import { Router } from "express";
 import type { Request, Response } from "express";
@@ -261,7 +261,7 @@ router.patch(
 
       const updated = await db.spec.update({
         where: { id: specId },
-        data: updateData as never,
+        data: updateData as any,
       });
 
       // Create new version if content changed
@@ -271,7 +271,7 @@ router.patch(
           data: {
             specId,
             version: nextVersion,
-            content: data.content,
+            content: data.content as Prisma.InputJsonValue,
             changeNote: data.changeNote ?? null,
           },
         });
