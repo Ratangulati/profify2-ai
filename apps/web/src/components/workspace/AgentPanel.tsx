@@ -53,10 +53,12 @@ function AIOutputView({
 }) {
   if (!output) {
     return (
-      <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2">
-        <Zap className="h-8 w-8 opacity-30" />
-        <p className="text-xs">AI output will appear here</p>
-        <p className="text-[10px]">Use slash commands or select text in the editor</p>
+      <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
+        <Zap className="text-primary/40 h-8 w-8" />
+        <p className="text-xs font-medium">No output yet</p>
+        <p className="text-[11px] leading-relaxed">
+          Run a slash command or select text in the editor to see AI output here.
+        </p>
       </div>
     );
   }
@@ -316,7 +318,7 @@ export function AgentPanel({
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs transition-colors ${
               activeTab === tab.id
-                ? "border-primary text-foreground border-b-2 font-medium"
+                ? "border-b-2 border-primary text-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

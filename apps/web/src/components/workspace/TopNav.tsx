@@ -48,7 +48,7 @@ export function TopNav({
       {/* Center: command palette trigger */}
       <button
         onClick={onCommandPalette}
-        className="border-border bg-muted/50 text-muted-foreground hover:bg-muted flex h-7 items-center gap-2 rounded-md border px-3 text-xs"
+        className="border-border/80 bg-muted/50 text-muted-foreground hover:bg-muted flex h-7 items-center gap-2 rounded-lg border px-3 text-xs"
       >
         <Search className="h-3 w-3" />
         <span>Search everything...</span>
@@ -69,7 +69,7 @@ export function TopNav({
         <button className="hover:bg-accent flex h-7 w-7 items-center justify-center rounded">
           <Bell className="text-muted-foreground h-3.5 w-3.5" />
         </button>
-        <button className="bg-primary/10 hover:bg-primary/20 flex h-7 w-7 items-center justify-center rounded-full">
+        <button className="bg-primary/10 hover:bg-primary/20 ring-primary/30 flex h-7 w-7 items-center justify-center rounded-full ring-2">
           <User className="text-primary h-3.5 w-3.5" />
         </button>
       </div>
