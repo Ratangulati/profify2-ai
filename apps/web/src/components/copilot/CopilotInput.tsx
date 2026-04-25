@@ -129,7 +129,7 @@ export function CopilotInput({
 
       <div className="flex items-end gap-2">
         <textarea
-          ref={textareaRef}
+          ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
