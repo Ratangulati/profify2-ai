@@ -26,6 +26,7 @@ model Workspace {
   apiKeys     ApiKey[]
   auditLogs   AuditLog[]
   projects    Project[]
+  credentials WorkspaceCredential[]
 
   @@map("workspaces")
 }
@@ -41,13 +42,14 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  accounts     Account[]
-  sessions     Session[]
-  memberships  WorkspaceMembership[]
-  auditLogs    AuditLog[]
-  specComments SpecComment[]
-  decisions    Decision[]            @relation("DecisionCreatedBy")
-  approvals    Decision[]            @relation("DecisionApprovers")
+  accounts             Account[]
+  sessions             Session[]
+  memberships          WorkspaceMembership[]
+  auditLogs            AuditLog[]
+  specComments         SpecComment[]
+  decisions            Decision[]            @relation("DecisionCreatedBy")
+  approvals            Decision[]            @relation("DecisionApprovers")
+  workspaceCredentials WorkspaceCredential[] @relation("WorkspaceCredentialCreator")
 
   @@map("users")
 }
@@ -946,6 +948,25 @@ model PendingAction {
   @@map("pending_actions")
 }
 
+model WorkspaceCredential {
+  id           String             @id @default(cuid())
+  provider     CredentialProvider
+  keyEncrypted String             @map("key_encrypted")
+  keyPrefix    String             @map("key_prefix")
+  label        String?
+  createdAt    DateTime           @default(now()) @map("created_at")
+  lastUsedAt   DateTime?          @map("last_used_at")
+
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdById String    @map("created_by_id")
+  createdBy   User      @relation("WorkspaceCredentialCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, provider])
+  @@index([workspaceId])
+  @@map("workspace_credentials")
+}
+
 // ─────────────────────────────────────────────
 // Enums
 // ─────────────────────────────────────────────
@@ -1149,4 +1170,11 @@ enum ActionStatus {
   REJECTED
   EXPIRED
   FAILED
+}
+
+enum CredentialProvider {
+  OPENAI
+  ANTHROPIC
+  GOOGLE
+  OLLAMA
 }
