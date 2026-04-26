@@ -46,8 +46,8 @@ model User {
   memberships  WorkspaceMembership[]
   auditLogs    AuditLog[]
   specComments SpecComment[]
-  decisions    Decision[]              @relation("DecisionCreatedBy")
-  approvals    Decision[]              @relation("DecisionApprovers")
+  decisions    Decision[]            @relation("DecisionCreatedBy")
+  approvals    Decision[]            @relation("DecisionApprovers")
 
   @@map("users")
 }
@@ -96,10 +96,10 @@ model VerificationToken {
 }
 
 model WorkspaceMembership {
-  id        String          @id @default(cuid())
-  role      WorkspaceRole   @default(MEMBER)
-  createdAt DateTime        @default(now()) @map("created_at")
-  updatedAt DateTime        @updatedAt @map("updated_at")
+  id        String        @id @default(cuid())
+  role      WorkspaceRole @default(MEMBER)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
 
   userId      String    @map("user_id")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -112,15 +112,15 @@ model WorkspaceMembership {
 }
 
 model ApiKey {
-  id          String    @id @default(cuid())
-  name        String
-  keyHash     String    @unique @map("key_hash")
-  keyPrefix   String    @map("key_prefix")
-  scopes      String[]  @default([])
-  lastUsedAt  DateTime? @map("last_used_at")
-  expiresAt   DateTime? @map("expires_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id         String    @id @default(cuid())
+  name       String
+  keyHash    String    @unique @map("key_hash")
+  keyPrefix  String    @map("key_prefix")
+  scopes     String[]  @default([])
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
   workspaceId String    @map("workspace_id")
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -168,15 +168,15 @@ model Project {
   workspaceId String    @map("workspace_id")
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  dataSources     DataSource[]
-  feedbackItems   FeedbackItem[]
-  themes          Theme[]
-  insights        Insight[]
-  personas        Persona[]
-  opportunities   Opportunity[]
-  specs           Spec[]
-  tickets         Ticket[]
-  decisions       Decision[]
+  dataSources        DataSource[]
+  feedbackItems      FeedbackItem[]
+  themes             Theme[]
+  insights           Insight[]
+  personas           Persona[]
+  opportunities      Opportunity[]
+  specs              Spec[]
+  tickets            Ticket[]
+  decisions          Decision[]
   trendDataPoints    TrendDataPoint[]
   spikeAlerts        SpikeAlert[]
   contradictions     Contradiction[]
@@ -186,6 +186,7 @@ model Project {
   jtbds              JTBD[]
   featureOutcomes    FeatureOutcome[]
   copilotThreads     CopilotThread[]
+  projectMemory      ProjectMemory[]
   scoringConfig      ScoringConfig?
 
   @@index([workspaceId])
@@ -194,16 +195,16 @@ model Project {
 }
 
 model DataSource {
-  id           String           @id @default(cuid())
-  type         DataSourceType
-  name         String
-  config       Json             @default("{}")
-  syncStatus   SyncStatus       @default(IDLE) @map("sync_status")
-  lastSyncAt   DateTime?        @map("last_synced_at")
-  lastSyncError String?         @map("last_sync_error")
-  enabled      Boolean          @default(true)
-  createdAt    DateTime         @default(now()) @map("created_at")
-  updatedAt    DateTime         @updatedAt @map("updated_at")
+  id            String         @id @default(cuid())
+  type          DataSourceType
+  name          String
+  config        Json           @default("{}")
+  syncStatus    SyncStatus     @default(IDLE) @map("sync_status")
+  lastSyncAt    DateTime?      @map("last_synced_at")
+  lastSyncError String?        @map("last_sync_error")
+  enabled       Boolean        @default(true)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -216,23 +217,23 @@ model DataSource {
 }
 
 model FeedbackItem {
-  id              String   @id @default(cuid())
-  content         String
-  sourceRef       String?  @map("source_ref")
-  sourceUrl       String?  @map("source_url")
-  customerEmail   String?  @map("customer_email")
-  customerName    String?  @map("customer_name")
-  segmentTags     String[] @map("segment_tags")
-  language        String?  @default("en")
+  id                     String     @id @default(cuid())
+  content                String
+  sourceRef              String?    @map("source_ref")
+  sourceUrl              String?    @map("source_url")
+  customerEmail          String?    @map("customer_email")
+  customerName           String?    @map("customer_name")
+  segmentTags            String[]   @map("segment_tags")
+  language               String?    @default("en")
   sentiment              Sentiment?
-  sentimentScore         Float?   @map("sentiment_score")
-  sentimentJustification String?  @map("sentiment_justification")
-  sentimentProcessed     Boolean  @default(false) @map("sentiment_processed")
-  metadata               Json     @default("{}")
-  processedForInsights   Boolean  @default(false) @map("processed_for_insights")
-  ingestedAt      DateTime @default(now()) @map("ingested_at")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  sentimentScore         Float?     @map("sentiment_score")
+  sentimentJustification String?    @map("sentiment_justification")
+  sentimentProcessed     Boolean    @default(false) @map("sentiment_processed")
+  metadata               Json       @default("{}")
+  processedForInsights   Boolean    @default(false) @map("processed_for_insights")
+  ingestedAt             DateTime   @default(now()) @map("ingested_at")
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
 
   projectId    String      @map("project_id")
   project      Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -245,12 +246,12 @@ model FeedbackItem {
   specEvidence       SpecEvidence[]
   competitorMentions CompetitorMention[]
 
+  @@unique([dataSourceId, sourceRef])
   @@index([projectId])
   @@index([projectId, ingestedAt])
   @@index([projectId, sentiment])
   @@index([projectId, processedForInsights])
   @@index([projectId, sentimentProcessed])
-  @@unique([dataSourceId, sourceRef])
   @@index([dataSourceId])
   @@index([segmentTags], type: Gin)
   @@map("feedback_items")
@@ -279,15 +280,15 @@ model Attachment {
 // ─────────────────────────────────────────────
 
 model Theme {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  color       String?
-  autoGenerated Boolean @default(false) @map("auto_generated")
-  feedbackCount Int     @default(0)     @map("feedback_count")
-  metadata    Json     @default("{}")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  color         String?
+  autoGenerated Boolean  @default(false) @map("auto_generated")
+  feedbackCount Int      @default(0) @map("feedback_count")
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -318,33 +319,33 @@ model ThemeFeedbackItem {
 }
 
 model Insight {
-  id                  String      @id @default(cuid())
+  id                  String       @id @default(cuid())
   title               String
   description         String
   type                InsightType
-  severityScore       Float       @default(0) @map("severity_score")
-  frequencyCount      Int         @default(0) @map("frequency_count")
+  severityScore       Float        @default(0) @map("severity_score")
+  frequencyCount      Int          @default(0) @map("frequency_count")
   trend               InsightTrend @default(STABLE)
-  segmentDistribution Json        @default("{}") @map("segment_distribution")
-  affectedWorkflow    String?     @map("affected_workflow")
-  inferredJtbd        String?     @map("inferred_jtbd")
-  embedding           Float[]     @default([])
-  metadata            Json        @default("{}")
-  createdAt           DateTime    @default(now()) @map("created_at")
-  updatedAt           DateTime    @updatedAt @map("updated_at")
+  segmentDistribution Json         @default("{}") @map("segment_distribution")
+  affectedWorkflow    String?      @map("affected_workflow")
+  inferredJtbd        String?      @map("inferred_jtbd")
+  embedding           Float[]      @default([])
+  metadata            Json         @default("{}")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   themeId   String? @map("theme_id")
   theme     Theme?  @relation(fields: [themeId], references: [id], onDelete: SetNull)
 
-  insightEvidence   InsightEvidence[]
-  opportunities     OpportunityInsight[]
-  specEvidence      SpecEvidence[]
-  ticketInsights    TicketInsight[]
-  decisionEvidence  DecisionEvidence[]
-  contradictionsA   Contradiction[] @relation("ContradictionInsightA")
-  contradictionsB   Contradiction[] @relation("ContradictionInsightB")
+  insightEvidence  InsightEvidence[]
+  opportunities    OpportunityInsight[]
+  specEvidence     SpecEvidence[]
+  ticketInsights   TicketInsight[]
+  decisionEvidence DecisionEvidence[]
+  contradictionsA  Contradiction[]      @relation("ContradictionInsightA")
+  contradictionsB  Contradiction[]      @relation("ContradictionInsightB")
 
   @@index([projectId])
   @@index([projectId, type])
@@ -371,12 +372,12 @@ model InsightEvidence {
 
 model TrendDataPoint {
   id         String   @id @default(cuid())
-  entityType String   @map("entity_type")  // "theme" | "insight" | "project"
+  entityType String   @map("entity_type") // "theme" | "insight" | "project"
   entityId   String   @map("entity_id")
-  period     DateTime                       // Start of the week (ISO Monday)
-  metric     String                         // "volume" | "avg_sentiment" | "source_distribution"
+  period     DateTime // Start of the week (ISO Monday)
+  metric     String // "volume" | "avg_sentiment" | "source_distribution"
   value      Float    @default(0)
-  metadata   Json     @default("{}")        // source_distribution stored here as JSON
+  metadata   Json     @default("{}") // source_distribution stored here as JSON
   createdAt  DateTime @default(now()) @map("created_at")
 
   projectId String  @map("project_id")
@@ -389,18 +390,18 @@ model TrendDataPoint {
 }
 
 model SpikeAlert {
-  id          String     @id @default(cuid())
-  entityType  String     @map("entity_type")  // "theme" | "insight"
-  entityId    String     @map("entity_id")
-  entityTitle String     @map("entity_title")
-  spikeFactor Float      @map("spike_factor")
-  currentVolume Int      @map("current_volume")
-  rollingAverage Float   @map("rolling_average")
-  sampleItems Json       @default("[]") @map("sample_items")
-  status      AlertStatus @default(PENDING)
-  deliveredVia String[]  @default([]) @map("delivered_via")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  resolvedAt  DateTime?  @map("resolved_at")
+  id             String      @id @default(cuid())
+  entityType     String      @map("entity_type") // "theme" | "insight"
+  entityId       String      @map("entity_id")
+  entityTitle    String      @map("entity_title")
+  spikeFactor    Float       @map("spike_factor")
+  currentVolume  Int         @map("current_volume")
+  rollingAverage Float       @map("rolling_average")
+  sampleItems    Json        @default("[]") @map("sample_items")
+  status         AlertStatus @default(PENDING)
+  deliveredVia   String[]    @default([]) @map("delivered_via")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  resolvedAt     DateTime?   @map("resolved_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -411,16 +412,16 @@ model SpikeAlert {
 }
 
 model Persona {
-  id           String   @id @default(cuid())
-  name         String
-  description  String?
-  goals        String[] @default([])
-  frustrations String[] @default([])
-  behaviors    Json     @default("{}")
-  demographics Json     @default("{}")
-  autoGenerated Boolean @default(false) @map("auto_generated")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  goals         String[] @default([])
+  frustrations  String[] @default([])
+  behaviors     Json     @default("{}")
+  demographics  Json     @default("{}")
+  autoGenerated Boolean  @default(false) @map("auto_generated")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -430,43 +431,43 @@ model Persona {
 }
 
 model Opportunity {
-  id                 String   @id @default(cuid())
-  title              String
-  description        String?
-  status             OpportunityStatus @default(IDENTIFIED)
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  status      OpportunityStatus @default(IDENTIFIED)
 
   // Composite score dimensions
-  frequencyScore     Float    @default(0) @map("frequency_score")
-  severityScore      Float    @default(0) @map("severity_score")
-  strategicAlignment Float    @default(0) @map("strategic_alignment")
-  effortEstimate     Int      @default(3) @map("effort_estimate")      // 1-5 scale
-  compositeScore     Float    @default(0) @map("composite_score")
+  frequencyScore     Float @default(0) @map("frequency_score")
+  severityScore      Float @default(0) @map("severity_score")
+  strategicAlignment Float @default(0) @map("strategic_alignment")
+  effortEstimate     Int   @default(3) @map("effort_estimate") // 1-5 scale
+  compositeScore     Float @default(0) @map("composite_score")
 
   // RICE score components
-  riceReach          Int?     @map("rice_reach")
-  riceImpact         Float?   @map("rice_impact")
-  riceConfidence     Float?   @map("rice_confidence")
-  riceEffort         Float?   @map("rice_effort")
-  riceScore          Float?   @map("rice_score")
+  riceReach      Int?   @map("rice_reach")
+  riceImpact     Float? @map("rice_impact")
+  riceConfidence Float? @map("rice_confidence")
+  riceEffort     Float? @map("rice_effort")
+  riceScore      Float? @map("rice_score")
 
   // ICE score components
-  iceImpact          Float?   @map("ice_impact")
-  iceConfidence      Float?   @map("ice_confidence")
-  iceEase            Float?   @map("ice_ease")
-  iceScore           Float?   @map("ice_score")
+  iceImpact     Float? @map("ice_impact")
+  iceConfidence Float? @map("ice_confidence")
+  iceEase       Float? @map("ice_ease")
+  iceScore      Float? @map("ice_score")
 
   // Segment-weighted frequency
-  segmentWeightedFreq Float   @default(0) @map("segment_weighted_freq")
+  segmentWeightedFreq Float @default(0) @map("segment_weighted_freq")
 
   // Strategic alignment details (per-bet scores as JSON)
-  alignmentScores    Json     @default("{}") @map("alignment_scores")
+  alignmentScores Json @default("{}") @map("alignment_scores")
 
   // Manual override rank (null = use computed score)
-  manualRank         Int?     @map("manual_rank")
+  manualRank Int? @map("manual_rank")
 
-  customScores       Json     @default("{}")   @map("custom_scores")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  customScores Json     @default("{}") @map("custom_scores")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -484,8 +485,8 @@ model Opportunity {
 }
 
 model OpportunityTheme {
-  id            String      @id @default(cuid())
-  createdAt     DateTime    @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
 
   opportunityId String      @map("opportunity_id")
   opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
@@ -498,7 +499,7 @@ model OpportunityTheme {
 }
 
 model ScoringConfig {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // Composite score weights (must sum to 1.0)
   weightFrequency          Float @default(0.3) @map("weight_frequency")
@@ -536,8 +537,8 @@ model StrategicBet {
 }
 
 model OpportunityInsight {
-  id            String      @id @default(cuid())
-  createdAt     DateTime    @default(now()) @map("created_at")
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
 
   opportunityId String      @map("opportunity_id")
   opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
@@ -554,14 +555,14 @@ model OpportunityInsight {
 // ─────────────────────────────────────────────
 
 model Spec {
-  id          String     @id @default(cuid())
-  title       String
-  type        SpecType   @default(PRD)
-  status      SpecStatus @default(DRAFT)
-  content     Json       @default("{}")
-  metadata    Json       @default("{}")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  id        String     @id @default(cuid())
+  title     String
+  type      SpecType   @default(PRD)
+  status    SpecStatus @default(DRAFT)
+  content   Json       @default("{}")
+  metadata  Json       @default("{}")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -612,14 +613,14 @@ model SpecComment {
 }
 
 model SpecEvidence {
-  id           String            @id @default(cuid())
-  sectionRef   String?           @map("section_ref")
+  id           String           @id @default(cuid())
+  sectionRef   String?          @map("section_ref")
   note         String?
-  evidenceType SpecEvidenceType  @default(INSIGHT) @map("evidence_type")
-  citationRef  String?           @map("citation_ref")   // e.g., "[Evidence: ins_xyz]"
-  position     Int?                                      // character offset in section
-  versionNum   Int?              @map("version_num")     // spec version this citation belongs to
-  createdAt    DateTime          @default(now()) @map("created_at")
+  evidenceType SpecEvidenceType @default(INSIGHT) @map("evidence_type")
+  citationRef  String?          @map("citation_ref") // e.g., "[Evidence: ins_xyz]"
+  position     Int? // character offset in section
+  versionNum   Int?             @map("version_num") // spec version this citation belongs to
+  createdAt    DateTime         @default(now()) @map("created_at")
 
   specId         String        @map("spec_id")
   spec           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
@@ -662,17 +663,17 @@ model Contradiction {
 }
 
 model Assumption {
-  id               String                   @id @default(cuid())
+  id               String                     @id @default(cuid())
   assumption       String
   category         AssumptionCategory
-  quoteText        String                   @map("quote_text")
-  sectionRef       String?                  @map("section_ref")
-  riskLevel        AssumptionRiskLevel      @default(MEDIUM)
+  quoteText        String                     @map("quote_text")
+  sectionRef       String?                    @map("section_ref")
+  riskLevel        AssumptionRiskLevel        @default(MEDIUM)
   validationStatus AssumptionValidationStatus @default(UNVALIDATED) @map("validation_status")
   suggestion       String?
-  metadata         Json                     @default("{}")
-  createdAt        DateTime                 @default(now()) @map("created_at")
-  updatedAt        DateTime                 @updatedAt @map("updated_at")
+  metadata         Json                       @default("{}")
+  createdAt        DateTime                   @default(now()) @map("created_at")
+  updatedAt        DateTime                   @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -785,17 +786,17 @@ model FeatureOutcome {
 // ─────────────────────────────────────────────
 
 model Ticket {
-  id           String       @id @default(cuid())
-  externalId   String?      @map("external_id")
-  externalUrl  String?      @map("external_url")
-  provider     TicketProvider?
-  title        String
-  description  String?
-  status       String       @default("open")
-  priority     String?
-  metadata     Json         @default("{}")
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
+  id          String          @id @default(cuid())
+  externalId  String?         @map("external_id")
+  externalUrl String?         @map("external_url")
+  provider    TicketProvider?
+  title       String
+  description String?
+  status      String          @default("open")
+  priority    String?
+  metadata    Json            @default("{}")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -826,15 +827,15 @@ model TicketInsight {
 }
 
 model Decision {
-  id          String   @id @default(cuid())
-  title       String
-  rationale   String
-  outcome     String?
-  evidence    Json     @default("[]")
-  status      DecisionStatus @default(PROPOSED)
-  decidedAt   DateTime?      @map("decided_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String         @id @default(cuid())
+  title     String
+  rationale String
+  outcome   String?
+  evidence  Json           @default("[]")
+  status    DecisionStatus @default(PROPOSED)
+  decidedAt DateTime?      @map("decided_at")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
 
   projectId   String  @map("project_id")
   project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -882,22 +883,44 @@ model CopilotThread {
 }
 
 model CopilotMessage {
-  id            String              @id @default(cuid())
+  id            String             @id @default(cuid())
   role          CopilotMessageRole
   content       String
   mentions      Json?
-  toolTrace     Json?               @map("tool_trace")
+  toolTrace     Json?              @map("tool_trace")
   citations     Json?
   feedback      CopilotFeedback?
-  activeContext Json?               @map("active_context")
-  commandType   String?             @map("command_type")
-  createdAt     DateTime            @default(now()) @map("created_at")
+  activeContext Json?              @map("active_context")
+  commandType   String?            @map("command_type")
+  createdAt     DateTime           @default(now()) @map("created_at")
 
-  threadId String         @map("thread_id")
-  thread   CopilotThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId String        @map("thread_id")
+  thread   CopilotThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@index([threadId, createdAt])
   @@map("copilot_messages")
+}
+
+// ── Copilot Agent (Plan 1) ───────────────────────────────────────────
+
+model ProjectMemory {
+  id              String         @id @default(cuid())
+  category        MemoryCategory
+  content         String
+  source          MemorySource
+  confidence      Float          @default(1.0)
+  pinned          Boolean        @default(false)
+  lastUsedAt      DateTime?      @map("last_used_at")
+  lastConfirmedAt DateTime       @default(now()) @map("last_confirmed_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, category])
+  @@map("project_memory")
 }
 
 // ─────────────────────────────────────────────
@@ -1081,4 +1104,18 @@ enum CopilotMessageRole {
 enum CopilotFeedback {
   POSITIVE
   NEGATIVE
+}
+
+enum MemoryCategory {
+  PREFERENCE
+  CONTEXT
+  DECISION
+  CONSTRAINT
+  STAKEHOLDER
+}
+
+enum MemorySource {
+  EXPLICIT
+  LEARNED
+  IMPORTED
 }
